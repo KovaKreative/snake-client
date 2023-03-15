@@ -1,33 +1,45 @@
+const { ENCODING } = require("./constants");
+
 let connection;
 
 const setupInput = function(conn) {
   connection = conn;
   const stdin = process.stdin;
   stdin.setRawMode(true);
-  stdin.setEncoding("utf8");
+  stdin.setEncoding(ENCODING);
   stdin.resume();
   stdin.on('data', handleUserInput);
   return stdin;
 };
+
+let intervalID;
+
 const handleUserInput = function(key) {
+  if (key === '\u0003') {
+    console.log("Quit game");
+    process.exit();
+  }
+
+  let move = null;
+
   switch (key) {
     case '\u001b[D':
-      connection.write("Move: left");
+      move = "Move: left"
       break;
     case '\u001b[A':
-      connection.write("Move: up");
+      move = "Move: up";
       break;
     case '\u001b[C':
-      connection.write("Move: right");
+      move = "Move: right";
       break;
     case '\u001b[B':
-      connection.write("Move: down");
+      move = "Move: down";
       break;
     case 'y':
-      connection.write("Say: Gobble gobble!");
+      connection.write("Say: Eric in da house!");
       break;
-    case 'h':
-      connection.write("Say: Look ma, no hands!");
+      case 'h':
+      connection.write("Say: Gobble gobble!");
       break;
     case 'n':
       connection.write("Say: That's right!");
@@ -35,10 +47,17 @@ const handleUserInput = function(key) {
     case 'm':
       connection.write("Say: t('-t')");
       break;
-    case '\u0003':
-      connection.write("Quit game");
-      process.exit();
   }
+
+  if(move) {
+    clearInterval(intervalID);
+    intervalID = null;
+    intervalID = setInterval(() => {
+      connection.write(move);
+    }, 100);
+  }
+
+
 };
 
 module.exports = { setupInput };
